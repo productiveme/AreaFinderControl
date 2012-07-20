@@ -89,20 +89,16 @@
 		<script type="text/javascript">
 			var myAF = myAF || {};
 
-			//myAF.provinces = ['Gauteng', 'Western Cape'];
-			//myAF.cities = [['Johannesburg', 'Pretoria'], ['Cape Town', 'George']];
-			//myAF.suburbs = [[['Northcliff', 'Bryanston', 'Sandton'], ['Brooklyn', 'Wapadrand', 'Hatfield']], [['Woodstock', 'Clairemont', 'Durbanville'], ['Glenbarrie', 'Parkdene', 'Loerie Park']]];
-
 			myAF.provinces = [{
 				province : 'Gauteng',
 				cities : [{
 					city : 'Johannesburg',
 					suburbs : [{
-						suburb : 'Northcliff',
-						total : 4
-					}, {
 						suburb : 'Bryanston',
 						total : 2
+					}, {
+						suburb : 'Northcliff',
+						total : 4
 					}, {
 						suburb : 'Sandton',
 						total : 7
@@ -113,32 +109,35 @@
 						suburb : 'Brooklyn',
 						total : 3
 					}, {
-						suburb : 'Wapadrand',
-						total : 9
-					}, {
 						suburb : 'Hatfield',
 						total : 2
+					}, {
+						suburb : 'Wapadrand',
+						total : 9
 					}]
 				}]
 			}, {
-				province: 'KwaZulu-Natal',
-				cities: [{
-					city: 'Durban',
-					suburbs: [{suburb: 'Umhlanga', total: 1}]	
+				province : 'KwaZulu-Natal',
+				cities : [{
+					city : 'Durban',
+					suburbs : [{
+						suburb : 'Umhlanga',
+						total : 1
+					}]
 				}]
 			}, {
 				province : 'Western Cape',
 				cities : [{
 					city : 'Cape Town',
 					suburbs : [{
-						suburb : 'Woodstock',
-						total : 1
-					}, {
 						suburb : 'Clairemont',
 						total : 18
 					}, {
 						suburb : 'Durbanville',
 						total : 6
+					}, {
+						suburb : 'Woodstock',
+						total : 1
 					}]
 				}, {
 					city : 'George',
@@ -146,10 +145,10 @@
 						suburb : 'Glenbarrie',
 						total : 3
 					}, {
-						suburb : 'Parkdene',
+						suburb : 'Loerie Park',
 						total : 1
 					}, {
-						suburb : 'Loerie Park',
+						suburb : 'Parkdene',
 						total : 1
 					}]
 				}]
@@ -165,6 +164,7 @@
 			myAF.ViewModel = function() {
 				var self = this;
 				self.search = ko.observable('');
+				self.found = ko.observableArray();
 				self.resultsShown = ko.observable(false);
 				self.toggleResultsShown = function() {
 					self.resultsShown(!self.resultsShown());
@@ -218,9 +218,51 @@
 						self.selectedCity({});
 					};
 				};
+				
+				self.isFound = function(val) {
+					return (self.found.indexOf(val.suburb()) > -1);
+				};
 
 				self.selectCity = function(val) {
 					self.selectedCity(val);
+				};
+
+				self.selectSuburb = function(val) {
+					if(self.found.indexOf(val.suburb()) > -1) {
+						self.unselectSuburb(val.suburb());
+					} else {
+						self.found.push(val.suburb());
+					}
+				};
+
+				self.unselectSuburb = function(val) {
+					self.found.remove(val);
+				};
+
+				self.highlight = function(name) {
+					return name.replace(new RegExp(self.search(), 'i'), '<span class="label-info">$&</span>');
+				}
+
+				self.cityWithTotal = function(city) {
+					var total = 0;
+					$.each(city.suburbs(), function(i, o) {
+						total += o.total();
+					});
+					return self.highlight(city.city() + " (" + total + ")");
+				};
+
+				self.provinceWithTotal = function(province) {
+					var total = 0;
+					$.each(province.cities(), function(i, o) {
+						$.each(o.suburbs(), function(ii, oo) {
+							total += oo.total();
+						});
+					});
+					return self.highlight(province.province() + " (" + total + ")");
+				};
+				
+				self.clearSearch = function() {
+					self.search('');
 				};
 			};
 
@@ -232,31 +274,50 @@
 
 		<script type="text/html" id="myAF">
 			<div class="span6 form-search">
-			<input type="text" placeholder="Browse or Search for an area..." data-bind="value: search, valueUpdate: 'afterkeydown'">
-			<button class="btn"><i data-bind="css: { 'icon-chevron-down' : !resultsShown(), 'icon-chevron-up' : resultsShown }, click: toggleResultsShown"></i></button>
-
-			<div data-bind="visible: resultsShown, template: 'myAF_results'"></div>
+				<div class="row-fluid">
+					<div class="span6">
+						<input type="text" placeholder="Browse or Search for an area..." data-bind="value: search, valueUpdate: 'afterkeydown'" />
+						<i style="position:relative;top:2px;z-index:10;margin-left:-1.7em" class="icon-remove-sign" data-bind="visible: search() != '', click: clearSearch"></i>
+						<button class="btn"><i data-bind="css: { 'icon-chevron-down' : !resultsShown(), 'icon-chevron-up' : resultsShown }, click: toggleResultsShown"></i></button>
+					</div>
+					<div class="span6" style="overflow:hidden" data-bind="foreach: found">
+						<span class="label" data-bind="click: $parent.unselectSuburb"><span data-bind="text: $data"></span> <i class="icon-white icon-remove"></i></div>
+						</span>
+					</div>
+				<div data-bind="visible: resultsShown, template: 'myAF_results'"></div>
 			</div>
 		</script>
 
 		<script type="text/html" id="myAF_results">
 			<div class="row-fluid well">
-			<div class="span4" style="border-right:1px dashed black;">
-			<ul class="unstyled" data-bind="foreach: provinces">
-			<li style="cursor:pointer;" data-bind="click: $parent.selectProvince"><span data-bind="text: province"></span> <i data-bind="css: {'icon-ok-sign' : province === $parent.selectedProvince().province}"></i></li>
-			</div>
-			<div class="span4" style="border-right:1px dashed black;">
-			<ul class="unstyled" data-bind="foreach: selectedProvince().cities">
-			<li style="cursor:pointer;" data-bind="click: $parent.selectCity"><span data-bind="text: city"></span> <i data-bind="css: {'icon-ok-sign' : city === $parent.selectedCity().city}"></i></li>
-			</ul>
-			</div>
-			<div class="span4">
-			<ul class="unstyled" data-bind="foreach: selectedCity().suburbs">
-			<li style="cursor:pointer;"><span data-bind="text: suburb"></span> (<span data-bind="text: total"></span>)</li>
-			</ul>
-			</div>
+				<div class="span4" style="border-right:1px dashed black;">
+					<ul class="unstyled" data-bind="foreach: provinces">
+						<li style="cursor:pointer;" data-bind="click: $parent.selectProvince">
+							<span data-bind="html: $parent.provinceWithTotal($data), css: {'label': province === $parent.selectedProvince().province}"></span>
+							<i data-bind="css: {'xicon-ok-sign' : province === $parent.selectedProvince().province}"></i>
+						</li>
+					</ul>
+				</div>
+				<div class="span4" style="border-right:1px dashed black;">
+					<ul class="unstyled" data-bind="foreach: selectedProvince().cities">
+						<li style="cursor:pointer;" data-bind="click: $parent.selectCity">
+							<span data-bind="html: $parent.cityWithTotal($data), css: {'label': city === $parent.selectedCity().city}"></span>
+							<i data-bind="css: {'xicon-ok-sign' : city === $parent.selectedCity().city}"></i>
+						</li>
+					</ul>
+				</div>
+				<div class="span4">
+					<ul class="unstyled" data-bind="foreach: selectedCity().suburbs">
+						<li style="cursor:pointer;">
+							<span data-bind="html: $root.highlight(suburb()), click: $root.selectSuburb"></span>
+							(<span data-bind="text: total"></span>)
+							<i class="icon-ok-sign" data-bind="visible: $root.isFound($data)"></i>
+						</li>
+					</ul>
+				</div>
 			</div>
 		</script>
 
 	</body>
 </html>
+
