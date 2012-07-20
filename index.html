@@ -243,16 +243,16 @@
 			<div class="row-fluid well">
 			<div class="span4" style="border-right:1px dashed black;">
 			<ul class="unstyled" data-bind="foreach: provinces">
-			<li data-bind="click: $parent.selectProvince"><span data-bind="text: province"></span> <i data-bind="css: {'icon-ok-sign' : province === $parent.selectedProvince().province}"></i></li>
+			<li style="cursor:pointer;" data-bind="click: $parent.selectProvince"><span data-bind="text: province"></span> <i data-bind="css: {'icon-ok-sign' : province === $parent.selectedProvince().province}"></i></li>
 			</div>
 			<div class="span4" style="border-right:1px dashed black;">
 			<ul class="unstyled" data-bind="foreach: selectedProvince().cities">
-			<li data-bind="click: $parent.selectCity"><span data-bind="text: city"></span> <i data-bind="css: {'icon-ok-sign' : city === $parent.selectedCity().city}"></i></li>
+			<li style="cursor:pointer;" data-bind="click: $parent.selectCity"><span data-bind="text: city"></span> <i data-bind="css: {'icon-ok-sign' : city === $parent.selectedCity().city}"></i></li>
 			</ul>
 			</div>
 			<div class="span4">
 			<ul class="unstyled" data-bind="foreach: selectedCity().suburbs">
-			<li><span data-bind="text: suburb"></span> (<span data-bind="text: total"></span>)</li>
+			<li style="cursor:pointer;"><span data-bind="text: suburb"></span> (<span data-bind="text: total"></span>)</li>
 			</ul>
 			</div>
 			</div>
