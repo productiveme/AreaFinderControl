@@ -61,6 +61,101 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 		<script src="js/bootstrap.min.js"></script>
 		<script src="js/knockout-2.1.0.js"></script>
+		<script src="js/knockout.mapping.min.js"></script>
+
+		<script type="text/javascript">
+			if (!Array.prototype.filter) {
+				Array.prototype.filter = function(fun /*, thisp*/) {
+					var len = this.length;
+					if ( typeof fun != "function")
+						throw new TypeError();
+
+					var res = new Array();
+					var thisp = arguments[1];
+					for (var i = 0; i < len; i++) {
+						if ( i in this) {
+							var val = this[i];
+							// in case fun mutates this
+							if (fun.call(thisp, val, i, this))
+								res.push(val);
+						}
+					}
+
+					return res;
+				};
+			}
+		</script>
+
+		<script type="text/javascript">
+			var myAF = myAF || {};
+
+			//myAF.provinces = ['Gauteng', 'Western Cape'];
+			//myAF.cities = [['Johannesburg', 'Pretoria'], ['Cape Town', 'George']];
+			//myAF.suburbs = [[['Northcliff', 'Bryanston', 'Sandton'], ['Brooklyn', 'Wapadrand', 'Hatfield']], [['Woodstock', 'Clairemont', 'Durbanville'], ['Glenbarrie', 'Parkdene', 'Loerie Park']]];
+
+			myAF.provinces = [{
+				province : 'Gauteng',
+				cities : [{
+					city : 'Johannesburg',
+					suburbs : [{
+						suburb : 'Northcliff',
+						total : 4
+					}, {
+						suburb : 'Bryanston',
+						total : 2
+					}, {
+						suburb : 'Sandton',
+						total : 7
+					}]
+				}, {
+					city : 'Pretoria',
+					suburbs : [{
+						suburb : 'Brooklyn',
+						total : 3
+					}, {
+						suburb : 'Wapadrand',
+						total : 9
+					}, {
+						suburb : 'Hatfield',
+						total : 2
+					}]
+				}]
+			}, {
+				province: 'KwaZulu-Natal',
+				cities: [{
+					city: 'Durban',
+					suburbs: [{suburb: 'Umhlanga', total: 1}]	
+				}]
+			}, {
+				province : 'Western Cape',
+				cities : [{
+					city : 'Cape Town',
+					suburbs : [{
+						suburb : 'Woodstock',
+						total : 1
+					}, {
+						suburb : 'Clairemont',
+						total : 18
+					}, {
+						suburb : 'Durbanville',
+						total : 6
+					}]
+				}, {
+					city : 'George',
+					suburbs : [{
+						suburb : 'Glenbarrie',
+						total : 3
+					}, {
+						suburb : 'Parkdene',
+						total : 1
+					}, {
+						suburb : 'Loerie Park',
+						total : 1
+					}]
+				}]
+			}];
+
+		</script>
 
 		<script type="text/javascript">
 			//Add namespace
@@ -74,28 +169,93 @@
 				self.toggleResultsShown = function() {
 					self.resultsShown(!self.resultsShown());
 				}
+				self.provinces = ko.mapping.fromJS(myAF.provinces);
+				self.selectedProvince = ko.observable(self.provinces()[0]);
+				self.selectedCity = ko.observable(self.selectedProvince().cities()[0]);
 
-				self.searchThrottled = ko.computed(self.search).extend({throttle: 400});
+				self.searchThrottled = ko.computed(self.search).extend({
+					throttle : 400
+				});
+
+				self.searchThrottled.subscribe(function(val) {
+					if (val != '')
+						this.resultsShown(true);
+
+					ko.mapping.fromJS(myAF.provinces, this.provinces);
+
+					if (val != '') {
+						for (var i = this.provinces().length - 1; i >= 0; i--) {
+							var o = this.provinces()[i];
+							if (o.province().toLowerCase().indexOf(val.toLowerCase()) == -1) {
+								for (var ii = o.cities().length - 1; ii >= 0; ii--) {
+									var oo = o.cities()[ii];
+									if (oo.city().toLowerCase().indexOf(val.toLowerCase()) == -1) {
+										for (var iii = oo.suburbs().length - 1; iii >= 0; iii--) {
+											var ooo = oo.suburbs()[iii];
+											if (ooo.suburb().toLowerCase().indexOf(val.toLowerCase()) == -1) {
+												oo.suburbs.remove(ooo);
+											}
+										}
+										if (oo.suburbs().length == 0) {
+											o.cities.remove(oo);
+										}
+									}
+								}
+								if (o.cities().length == 0) {
+									this.provinces.remove(o);
+								}
+							}
+						};
+					};
+					this.selectProvince(self.provinces()[0] || {});
+				}, self);
+
+				self.selectProvince = function(val) {
+					self.selectedProvince(val);
+					if (val.cities && val.cities().length > 0) {
+						self.selectedCity(val.cities()[0])
+					} else {
+						self.selectedCity({});
+					};
+				};
+
+				self.selectCity = function(val) {
+					self.selectedCity(val);
+				};
 			};
 
 			//Apply Bindings
 			$(function() {
 				ko.applyBindings(new myAF.ViewModel(), $('.areaFinderControl')[0]);
 			});
-
 		</script>
 
 		<script type="text/html" id="myAF">
-			<form class="well form-search">
+			<div class="span6 form-search">
 			<input type="text" placeholder="Browse or Search for an area..." data-bind="value: search, valueUpdate: 'afterkeydown'">
 			<button class="btn"><i data-bind="css: { 'icon-chevron-down' : !resultsShown(), 'icon-chevron-up' : resultsShown }, click: toggleResultsShown"></i></button>
-			
-			<div data-bind="visible: resultsShown, template: myAF_results"></div>
-			</form>
+
+			<div data-bind="visible: resultsShown, template: 'myAF_results'"></div>
+			</div>
 		</script>
 
 		<script type="text/html" id="myAF_results">
-			<span data-bind="text: search"></span>
+			<div class="row-fluid well">
+			<div class="span4" style="border-right:1px dashed black;">
+			<ul class="unstyled" data-bind="foreach: provinces">
+			<li data-bind="click: $parent.selectProvince"><span data-bind="text: province"></span> <i data-bind="css: {'icon-ok-sign' : province === $parent.selectedProvince().province}"></i></li>
+			</div>
+			<div class="span4" style="border-right:1px dashed black;">
+			<ul class="unstyled" data-bind="foreach: selectedProvince().cities">
+			<li data-bind="click: $parent.selectCity"><span data-bind="text: city"></span> <i data-bind="css: {'icon-ok-sign' : city === $parent.selectedCity().city}"></i></li>
+			</ul>
+			</div>
+			<div class="span4">
+			<ul class="unstyled" data-bind="foreach: selectedCity().suburbs">
+			<li><span data-bind="text: suburb"></span> (<span data-bind="text: total"></span>)</li>
+			</ul>
+			</div>
+			</div>
 		</script>
 
 	</body>
