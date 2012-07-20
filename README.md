@@ -9,4 +9,4 @@ Feel free to [view the demo][4] at JSFiddle
 [1]: http://twitter.github.com/bootstrap
 [2]: http://knockoutjs.com
 [3]: http://jquery.com
-[4]: http://jsfiddle.net/jacoswarts/RCdAB/
+[4]: http://jsfiddle.net/jacoswarts/RCdAB/embedded/result/
