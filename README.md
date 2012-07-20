@@ -1,3 +1,9 @@
 ## Area Finder Control
 
-The purpose of this control will be to search or browse through a Province, City, Suburb hierarchy to find a particular area. The data will be retrieved via webservice calls.
+A control to select one or more suburbs. It allows searching and browsing through the hierarchy. 
+
+Built with [Twitter Bootstrap][1], [KnockouJS][2], [JQuery][3]
+
+[1]: http://twitter.github.com/bootstrap
+[2]: http://knockoutjs.com
+[3]: http://jquery.com

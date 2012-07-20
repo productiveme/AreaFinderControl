@@ -32,15 +32,7 @@
 					<a class="brand" href="#">Area Finder Control</a>
 					<div class="nav-collapse">
 						<ul class="nav">
-							<li class="active">
-								<a href="#">Home</a>
-							</li>
-							<li>
-								<a href="#about">About</a>
-							</li>
-							<li>
-								<a href="#contact">Contact</a>
-							</li>
+							
 						</ul>
 					</div><!--/.nav-collapse -->
 				</div>
@@ -62,29 +54,6 @@
 		<script src="js/bootstrap.min.js"></script>
 		<script src="js/knockout-2.1.0.js"></script>
 		<script src="js/knockout.mapping.min.js"></script>
-
-		<script type="text/javascript">
-			if (!Array.prototype.filter) {
-				Array.prototype.filter = function(fun /*, thisp*/) {
-					var len = this.length;
-					if ( typeof fun != "function")
-						throw new TypeError();
-
-					var res = new Array();
-					var thisp = arguments[1];
-					for (var i = 0; i < len; i++) {
-						if ( i in this) {
-							var val = this[i];
-							// in case fun mutates this
-							if (fun.call(thisp, val, i, this))
-								res.push(val);
-						}
-					}
-
-					return res;
-				};
-			}
-		</script>
 
 		<script type="text/javascript">
 			var myAF = myAF || {};
@@ -275,15 +244,13 @@
 		<script type="text/html" id="myAF">
 			<div class="span6 form-search">
 				<div class="row-fluid">
-					<div class="span6">
-						<input type="text" placeholder="Browse or Search for an area..." data-bind="value: search, valueUpdate: 'afterkeydown'" />
-						<i style="position:relative;top:2px;z-index:10;margin-left:-1.7em" class="icon-remove-sign" data-bind="visible: search() != '', click: clearSearch"></i>
-						<button class="btn"><i data-bind="css: { 'icon-chevron-down' : !resultsShown(), 'icon-chevron-up' : resultsShown }, click: toggleResultsShown"></i></button>
-					</div>
-					<div class="span6" style="overflow:hidden" data-bind="foreach: found">
-						<span class="label" data-bind="click: $parent.unselectSuburb"><span data-bind="text: $data"></span> <i class="icon-white icon-remove"></i></div>
-						</span>
-					</div>
+					<div class="span7" style="white-space:nowrap">
+                        <input type="text" placeholder="Browse or Search for an area..." data-bind="value: search, valueUpdate: 'afterkeydown'" /><i style="position:relative;top:2px;z-index:10;margin-left:-1.7em;margin-right:8px;" class="icon-remove-sign" data-bind="visible: search() != '', click: clearSearch"></i><button class="btn"><i data-bind="css: { 'icon-chevron-down' : !resultsShown(), 'icon-chevron-up' : resultsShown }, click: toggleResultsShown"></i></button>
+                    </div>
+                    <div class="span5" style="overflow:hidden" data-bind="foreach: found">
+                        <span class="label" data-bind="click: $parent.unselectSuburb"><span data-bind="text: $data"></span> <i class="icon-white icon-remove"></i></div>
+                        </span>
+                    </div>
 				<div data-bind="visible: resultsShown, template: 'myAF_results'"></div>
 			</div>
 		</script>
