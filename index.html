@@ -39,7 +39,7 @@
 					<a class="brand" href="#">Area Finder Control</a>
 					<div class="nav-collapse">
 						<ul class="nav">
-							
+
 						</ul>
 					</div><!--/.nav-collapse -->
 				</div>
@@ -183,6 +183,7 @@
 							}
 						};
 					};
+					this.selectCity({});
 					this.selectProvince(self.provinces()[0] || {});
 				}, self);
 
@@ -194,7 +195,7 @@
 						self.selectedCity({});
 					};
 				};
-				
+
 				self.isFound = function(val) {
 					return (self.found.indexOf(val.suburb()) > -1);
 				};
@@ -204,7 +205,7 @@
 				};
 
 				self.selectSuburb = function(val) {
-					if(self.found.indexOf(val.suburb()) > -1) {
+					if (self.found.indexOf(val.suburb()) > -1) {
 						self.unselectSuburb(val.suburb());
 					} else {
 						self.found.push(val.suburb());
@@ -236,10 +237,26 @@
 					});
 					return self.highlight(province.province() + " (" + total + ")");
 				};
-				
+
 				self.clearSearch = function() {
 					self.search('');
 				};
+
+				self.showProvinces = ko.computed(function() {
+					return (this.provinces().length > 1);
+				}, self);
+
+				self.showCities = ko.computed(function() {
+					return (this.provinces().length > 1 || (this.selectedProvince().cities && this.selectedProvince().cities().length > 1));
+				}, self);
+
+				self.matchFound = ko.computed(function() {
+					return (this.selectedCity().suburbs && this.selectedCity().suburbs().length > 0);
+				}, self);
+
+				self.showNoResults = ko.computed(function() {
+					return !this.matchFound();
+				}, self);
 			};
 
 			//Apply Bindings
@@ -252,44 +269,47 @@
 			<div class="span6 form-search">
 				<div class="row-fluid">
 					<div class="span7" style="white-space:nowrap">
-                        <input type="text" placeholder="Browse or Search for an area..." data-bind="value: search, valueUpdate: 'afterkeydown'" /><i style="position:relative;top:2px;z-index:10;margin-left:-1.7em;margin-right:8px;" class="icon-remove-sign" data-bind="visible: search() != '', click: clearSearch"></i><button class="btn"><i data-bind="css: { 'icon-chevron-down' : !resultsShown(), 'icon-chevron-up' : resultsShown }, click: toggleResultsShown"></i></button>
-                    </div>
-                    <div class="span5" style="overflow:hidden" data-bind="foreach: found">
-                        <span class="label" data-bind="click: $parent.unselectSuburb"><span data-bind="text: $data"></span> <i class="icon-white icon-remove"></i></div>
-                        </span>
-                    </div>
+						<input type="text" placeholder="Browse or Search for an area..." data-bind="value: search, valueUpdate: 'afterkeydown'" />
+						<i style="position:relative;top:2px;z-index:10;margin-left:-1.7em;margin-right:8px;" class="icon-remove-sign" data-bind="visible: search() != '', click: clearSearch"></i>
+						<button class="btn">
+							<i data-bind="css: { 'icon-chevron-down' : !resultsShown(), 'icon-chevron-up' : resultsShown }, click: toggleResultsShown"></i>
+						</button>
+					</div>
+					<div class="span5" style="overflow:hidden" data-bind="foreach: found">
+						<span style="cursor:pointer;" class="label" data-bind="click: $parent.unselectSuburb"><span data-bind="text: $data"></span> <i class="icon-white icon-remove"></i></span>
+					</div>
+				</div>
 				<div data-bind="visible: resultsShown, template: 'myAF_results'"></div>
 			</div>
 		</script>
 
 		<script type="text/html" id="myAF_results">
 			<div class="row-fluid well">
-				<div class="span4" style="border-right:1px dashed black;">
+				<div class="span4" style="border-right:1px dashed black;" data-bind="visible: matchFound">
 					<ul class="unstyled" data-bind="foreach: provinces">
 						<li style="cursor:pointer;" data-bind="click: $parent.selectProvince">
 							<span data-bind="html: $parent.provinceWithTotal($data), css: {'label': province === $parent.selectedProvince().province}"></span>
-							<i data-bind="css: {'xicon-ok-sign' : province === $parent.selectedProvince().province}"></i>
 						</li>
 					</ul>
 				</div>
-				<div class="span4" style="border-right:1px dashed black;">
+				<div class="span4" style="border-right:1px dashed black;" data-bind="visible: matchFound">
 					<ul class="unstyled" data-bind="foreach: selectedProvince().cities">
 						<li style="cursor:pointer;" data-bind="click: $parent.selectCity">
 							<span data-bind="html: $parent.cityWithTotal($data), css: {'label': city === $parent.selectedCity().city}"></span>
-							<i data-bind="css: {'xicon-ok-sign' : city === $parent.selectedCity().city}"></i>
 						</li>
 					</ul>
 				</div>
-				<div class="span4">
+				<div class="span4" data-bind="visible: matchFound">
 					<ul class="unstyled" data-bind="foreach: selectedCity().suburbs">
 						<li style="cursor:pointer;">
 							<span data-bind="html: $root.highlight(suburb()), click: $root.selectSuburb"></span>
-							(<span data-bind="text: total"></span>)
-							<i class="icon-ok-sign" data-bind="visible: $root.isFound($data)"></i>
+							(<span data-bind="text: total"></span>) <i class="icon-ok-sign" data-bind="visible: $root.isFound($data)"></i>
 						</li>
 					</ul>
 				</div>
+				<span data-bind="visible: showNoResults">No matching areas could be found.</span>
 			</div>
+
 		</script>
 
 	</body>
